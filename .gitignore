@@ -1,0 +1,4 @@
+*.wat
+*.wasm
+/node_nodules
+/build

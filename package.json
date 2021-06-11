@@ -1,0 +1,34 @@
+{
+  "name": "as-malloc",
+  "version": "0.0.1",
+  "description": "Malloc in AssemblyScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/index.js",
+    "asbuild:untouched": "asc assembly/index.ts --target debug",
+    "asbuild:optimized": "asc assembly/index.ts --target release",
+    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabriciopashaj/as-malloc.git"
+  },
+  "keywords": [
+    "malloc",
+    "assemblyscript",
+    "memory",
+    "wasm"
+  ],
+  "author": "Fabricio Pashaj <fabriciopashaj.dev@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fabriciopashaj/as-malloc/issues"
+  },
+  "homepage": "https://github.com/fabriciopashaj/as-malloc#readme",
+  "dependencies": {
+    "@assemblyscript/loader": "^0.19.1"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.19.1"
+  }
+}
