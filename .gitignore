@@ -2,3 +2,5 @@
 *.wasm
 /node_modules
 /build
+*.swp
+*.swo
