@@ -99,3 +99,13 @@ export function free(offset: usize): void {
 	printBlock(block.prev, 5);
 	printBlock(block.next, 5);
 }
+export function realloc(offset: usize, newSize: usize): usize {
+	if(offset < offsetof<ROOT>())
+		return 0;
+	const newOffset = malloc(newSize);
+	if(!newOffset)
+		return 0;
+	memory.copy(newOffset, offset, new BLOCK(offset - offsetof<BLOCK>()).size);
+	free(offset);
+	return newOffset;
+}
