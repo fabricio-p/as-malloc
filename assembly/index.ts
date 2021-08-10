@@ -9,11 +9,11 @@ const root: ROOT = changetype<ROOT>(0);
 function meminit(): void {
 	root.firstFree = new BLOCK(offsetof<ROOT>());
 	root.lastFree = root.firstFree;
-	root.last = <BLOCK>root.lastFree;
+	root.last = root.lastFree;
 	root.last.data = <usize>(<usize>memory.size() - <usize>root.last.ref -
 													 <usize>offsetof<BLOCK>()) | 1;
-	root.last.parent = root.last.next = root.last.prev = null;
-	printBlock(root.last, 0);
+	root.last.parent = root.last.next = root.last.prev = BLOCK.null;
+	printBlock(root.firstFree, 0);
 	initialised = true;
 }
 @inline
@@ -21,21 +21,21 @@ function align(size: usize): usize {
 	return (size + alignment - 1) & ~(alignment - 1);
 }
 @inline
-function findFirstFit(start: BLOCK, size: usize): BLOCK|null {
-	let current: BLOCK|null = start;
-	while(current != null && (<BLOCK>current).size < size)
-		current = (<BLOCK>current).next;
+function findFirstFit(start: BLOCK, size: usize): BLOCK {
+	let current: BLOCK = start;
+	while(current.ref && current.size < size)
+		current = current.next;
 	return current;
 }
 function split(block: BLOCK, size: usize): void {
 	const next = new BLOCK(block.ref + offsetof<BLOCK>() + size);
 	next.size = block.size - size - offsetof<BLOCK>();
-	next.free = true;
+	// next.free = true;
 	block.size = size;
 	block.next = next;
 	next.parent = block;
 	if(next.ref < root.last.ref)
-		(<BLOCK>next.child).parent = next;
+		next.child.parent = next;
 	swapPointers(block);
 }
 function trySplit(block: BLOCK, size: usize): boolean {
@@ -52,8 +52,8 @@ function swapPointers(block: BLOCK): void {
 	next.prev = block.prev;
 	block.prev = next;
 	next.prev = block.prev;
-	if(block.prev != null)
-		(<BLOCK>block.prev).next = next;
+	if(block.prev.ref)
+		block.prev.next = next;
 }
 @inline
 function updateRoot(block: BLOCK): void {
@@ -62,17 +62,17 @@ function updateRoot(block: BLOCK): void {
 	if(root.lastFree == block)
 		root.lastFree = block.next;
 	if(root.last == block)
-		root.last = <BLOCK>block.next;
+		root.last = block.next;
 }
 export function malloc(size: usize): usize {
 	if(!initialised)
 		meminit();
-	if(root.firstFree == null)
+	if(!root.firstFree.ref)
 		return 0;
 	size = align(size);
-	let fit = findFirstFit(<BLOCK>root.firstFree, size);
+	let fit = findFirstFit(root.firstFree, size);
 	printBlock(fit, 1);
-	if(fit == null)
+	if(!fit.ref)
 		return 0;
 	let block: BLOCK = <BLOCK>fit;
 	if(block.size > size)
@@ -86,13 +86,13 @@ export function free(offset: usize): void {
 	if(offset < offsetof<ROOT>())
 		return;
 	const block = new BLOCK(offset - offsetof<BLOCK>());
-	/*if((*/block.prev = block.searchFreePrev()//) == null) {
+	if((block.prev = block.searchFreePrev()).ref) {
+		block.next = block.prev.next;
+	} else
 		block.next = block.searchFreeNext();
-	/*} else
-		block.next = (<BLOCK>block.prev).next;*/
-	if(root.firstFree != null && (<BLOCK>root.firstFree).ref > block.ref)
+	if(root.firstFree.ref && root.firstFree.ref > block.ref)
 		root.firstFree = block;
-	else if((<BLOCK>root.lastFree).ref < block.ref)
+	else if(root.lastFree.ref < block.ref)
 		root.lastFree = block;
 	block.free = true;
 	printBlock(block, 5);
@@ -100,12 +100,13 @@ export function free(offset: usize): void {
 	printBlock(block.next, 5);
 }
 export function realloc(offset: usize, newSize: usize): usize {
-	if(offset < offsetof<ROOT>())
+	if(offset <= offsetof<ROOT>())
 		return 0;
+	const block = new BLOCK(offset - offsetof<BLOCK>());
+	if(block.size >= newSize)
+		return offset;
 	const newOffset = malloc(newSize);
-	if(!newOffset)
-		return 0;
-	memory.copy(newOffset, offset, new BLOCK(offset - offsetof<BLOCK>()).size);
+	memory.copy(newOffset, offset, block.size);
 	free(offset);
 	return newOffset;
 }
