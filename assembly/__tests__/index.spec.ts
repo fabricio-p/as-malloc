@@ -25,7 +25,7 @@ describe("as-malloc", () => {
 		expect(block.next).toStrictEqual(block.child);
 		expect(block.data).toStrictEqual(block.size);
 
-		block = <BLOCK>block.child;
+		block = block.child;
 
 		expect(block.size).toStrictEqual(<usize>memory.size() - block.ref -
 																		 offsetof<BLOCK>());

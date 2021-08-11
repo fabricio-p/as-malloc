@@ -14,7 +14,8 @@ module.exports = {
     /** To output a wat file, uncomment the following line. */
     // "--textFile": ["output.wat"],
     /** A runtime must be provided here. */
-    "--runtime": [], // Acceptable values are: "incremental", "minimal", and "stub"
+    "--runtime": ["incremental"], // Acceptable values are: "incremental", "minimal", and "stub"
+		"--use": ["ASC_DEBUG=1", "ASC_RTRACE=1"],
   },
 	"--memoryBase": [0x400],
   /**

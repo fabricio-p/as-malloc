@@ -1,12 +1,12 @@
 {
   "name": "as-malloc",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Malloc in AssemblyScript",
   "main": "index.js",
   "scripts": {
     "test": "node tests/index.js",
-    "asbuild:untouched": "asc assembly/index.ts --importMemory --target debug",
-    "asbuild:optimized": "asc assembly/index.ts --importMemory --target release",
+    "asbuild:untouched": "asc assembly/index.ts --importMemory --use ASC_DEBUG=1 --target debug",
+    "asbuild:optimized": "asc assembly/index.ts --importMemory --pedantic --target release",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized"
   },
   "repository": {
