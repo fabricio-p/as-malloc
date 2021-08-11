@@ -13,7 +13,7 @@ function meminit(): void {
 	root.last.data = <usize>(<usize>memory.size() - <usize>root.last.ref -
 													 <usize>offsetof<BLOCK>()) | 1;
 	root.last.parent = root.last.next = root.last.prev = BLOCK.null;
-	printBlock(root.firstFree, 0);
+	if(ASC_DEBUG) printBlock(root.firstFree, 0);
 	initialised = true;
 }
 @inline
@@ -28,14 +28,15 @@ function findFirstFit(start: BLOCK, size: usize): BLOCK {
 	return current;
 }
 function split(block: BLOCK, size: usize): void {
-	const next = new BLOCK(block.ref + offsetof<BLOCK>() + size);
-	next.size = block.size - size - offsetof<BLOCK>();
+	const child = new BLOCK(block.ref + offsetof<BLOCK>() + size);
+	child.size = block.size - size - offsetof<BLOCK>();
 	// next.free = true;
 	block.size = size;
-	block.next = next;
-	next.parent = block;
-	if(next.ref < root.last.ref)
-		next.child.parent = next;
+	block.next = child;
+	block.parent = block;
+	child.free = true;
+	if(child.ref < root.last.ref)
+		child.child.parent = child;
 	swapPointers(block);
 }
 function trySplit(block: BLOCK, size: usize): boolean {
@@ -57,8 +58,11 @@ function swapPointers(block: BLOCK): void {
 }
 @inline
 function updateRoot(block: BLOCK): void {
-	if(root.firstFree == block)
-		root.firstFree = printBlock(block.prev || block.next, 8);
+	if(root.firstFree == block) {
+		root.firstFree = block.prev || block.next;
+		if(ASC_DEBUG)
+			printBlock(root.firstFree, 8);
+	}
 	if(root.lastFree == block)
 		root.lastFree = block.next;
 	if(root.last == block)
@@ -71,7 +75,7 @@ export function malloc(size: usize): usize {
 		return 0;
 	size = align(size);
 	let fit = findFirstFit(root.firstFree, size);
-	printBlock(fit, 1);
+	if(ASC_DEBUG) printBlock(fit, 1);
 	if(!fit.ref)
 		return 0;
 	let block: BLOCK = <BLOCK>fit;
@@ -79,7 +83,7 @@ export function malloc(size: usize): usize {
 		trySplit(block, size);
 	updateRoot(block);
 	block.free = false;
-	printBlock(block, 1);
+	if(ASC_DEBUG) printBlock(block, 1);
 	return block.ref + offsetof<BLOCK>();
 }
 export function free(offset: usize): void {
@@ -95,9 +99,9 @@ export function free(offset: usize): void {
 	else if(root.lastFree.ref < block.ref)
 		root.lastFree = block;
 	block.free = true;
-	printBlock(block, 5);
-	printBlock(block.prev, 5);
-	printBlock(block.next, 5);
+	if(ASC_DEBUG) printBlock(block, 5);
+	if(ASC_DEBUG) printBlock(block.prev, 5);
+	if(ASC_DEBUG) printBlock(block.next, 5);
 }
 export function realloc(offset: usize, newSize: usize): usize {
 	if(offset <= offsetof<ROOT>())
